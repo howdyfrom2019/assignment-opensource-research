@@ -1,0 +1,66 @@
+---
+alwaysApply: true
+---
+
+# Folder Structure Rules based on FSD Architecture
+
+## RULE: lib
+
+- DESCRIBE: This layer contains pure utility functions, constants, and reusable hooks shared across the project.
+- ALLOW_IMPORT_FROM:
+  - lib
+- FORBID_IMPORT_FROM:
+  - features
+  - pages
+  - services
+
+## RULE: types
+
+- DESCRIBE: Contains type definitions for async operations, schemas, and global wrappers (e.g., bigint, window).
+- ALLOW_IMPORT_FROM:
+  - types
+- FORBID_IMPORT_FROM:
+  - features
+  - pages
+
+## RULE: components
+
+- DESCRIBE: Reusable UI components that are purely visual and independent from business logic.
+- ALLOW_IMPORT_FROM:
+  - lib
+  - types
+- FORBID_IMPORT_FROM:
+  - features
+  - pages
+
+## RULE: services
+
+- DESCRIBE: Defines service functions such as API requests or other async communication layers.
+- ALLOW_IMPORT_FROM:
+  - lib
+  - types
+- FORBID_IMPORT_FROM:
+  - features
+  - pages
+
+## RULE: features
+
+- DESCRIBE: Feature modules implementing specific user scenarios. May include `ui`, `hook`, and `lib` subfolders.
+- ALLOW_IMPORT_FROM:
+  - lib
+  - types
+  - services
+  - components
+- FORBID_IMPORT_FROM:
+  - pages
+
+## RULE: pages
+
+- DESCRIBE: Top-level routing entry points, composed of features and components to construct actual screens.
+- ALLOW_IMPORT_FROM:
+  - features
+  - components
+  - lib
+  - types
+- FORBID_IMPORT_FROM:
+  - (none)
