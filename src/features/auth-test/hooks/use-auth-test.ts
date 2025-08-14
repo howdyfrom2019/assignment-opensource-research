@@ -1,5 +1,13 @@
-import { useState, useEffect } from "react";
+import { useAtom, useAtomValue } from "jotai";
 import { isAxiosError, createAxiosInstance } from "@/lib/provider/axios";
+import {
+  authTokensAtom,
+  authLoadingAtom,
+  authTestResultsAtom,
+  setAuthTokensAtom,
+  updateAccessTokenAtom,
+  resetAuthStateAtom,
+} from "@/lib/store";
 
 // 커스텀 axios 인스턴스를 생성합니다.
 const myAxios = createAxiosInstance();
@@ -37,52 +45,15 @@ myAxios.interceptors.response.use(
   }
 );
 
-// 테스트 결과 타입 정의
-type TestResult = {
-  error?: string;
-  message?: string;
-  errorDetails?: any;
-  status?: number;
-  [key: string]: any;
-};
-
-type ResultsState = {
-  loginTest: TestResult | null;
-  refreshTest: TestResult | null;
-  logoutTest: TestResult | null;
-  protectedTest: TestResult | null;
-  statusTest: TestResult | null;
-};
+// 테스트 결과 타입 정의 (auth-store에서 import)
 
 export function useAuthTest() {
-  const [results, setResults] = useState<ResultsState>({
-    loginTest: null,
-    refreshTest: null,
-    logoutTest: null,
-    protectedTest: null,
-    statusTest: null,
-  });
-
-  const [isLoading, setIsLoading] = useState({
-    login: false,
-    refresh: false,
-    logout: false,
-    protected: false,
-    status: false,
-  });
-
-  const [tokens, setTokens] = useState<{
-    accessToken: string | null;
-    refreshToken: string | null;
-  }>({
-    accessToken: null,
-    refreshToken: null,
-  });
-
-  // 토큰 상태 변경 추적
-  useEffect(() => {
-    console.log("🔐 Tokens state changed:", tokens);
-  }, [tokens]);
+  const [results, setResults] = useAtom(authTestResultsAtom);
+  const [isLoading, setIsLoading] = useAtom(authLoadingAtom);
+  const [tokens, setTokens] = useAtom(authTokensAtom);
+  const setAuthTokens = useAtom(setAuthTokensAtom)[1];
+  const updateAccessToken = useAtom(updateAccessTokenAtom)[1];
+  const resetAuthState = useAtom(resetAuthStateAtom)[1];
 
   // 로그인 테스트
   const handleLoginTest = async () => {
@@ -97,16 +68,11 @@ export function useAuthTest() {
         throw new Error("토큰이 응답에 포함되지 않았습니다.");
       }
 
-      setTokens({ accessToken, refreshToken });
+      setAuthTokens({ accessToken, refreshToken });
       setResults((prev) => ({ ...prev, loginTest: response.data }));
 
       console.log("Login successful:", { accessToken, refreshToken });
       console.log("Tokens state updated:", { accessToken, refreshToken });
-
-      // 토큰 설정 후 상태 확인
-      setTimeout(() => {
-        console.log("🔍 Current tokens state after login:", tokens);
-      }, 0);
     } catch (error) {
       setResults((prev) => ({
         ...prev,
@@ -141,7 +107,7 @@ export function useAuthTest() {
         throw new Error("새로운 accessToken이 응답에 포함되지 않았습니다.");
       }
 
-      setTokens((prev) => ({ ...prev, accessToken }));
+      updateAccessToken(accessToken);
       setResults((prev) => ({ ...prev, refreshTest: response.data }));
 
       console.log("Token refresh successful:", { accessToken });
@@ -218,8 +184,8 @@ export function useAuthTest() {
         refreshToken: tokens.refreshToken,
       });
 
-      // 로컬 토큰 상태 초기화
-      setTokens({ accessToken: null, refreshToken: null });
+      // 전역 인증 상태 초기화
+      resetAuthState();
       setResults((prev) => ({ ...prev, logoutTest: response.data }));
 
       console.log("Logout successful");

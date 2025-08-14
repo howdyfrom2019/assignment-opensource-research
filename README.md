@@ -1,6 +1,17 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Features
+
+- **Authentication System**: JWT-based authentication with access and refresh tokens
+- **Token Management**: Centralized token storage using singleton pattern
+- **API Routes**: Login, refresh, logout, and protected endpoints
+- **Token Store**: In-memory token storage with automatic cleanup (production-ready with Redis/DB)
+- **Custom Axios Library**: Custom HTTP client with interceptors and error handling
+- **Interactive Testing UI**: Built-in UI for testing all authentication endpoints
+
 ## Getting Started
+
+### Running the Application
 
 First, run the development server:
 
@@ -18,19 +29,57 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Testing the Authentication System
 
-## Learn More
+The application includes a comprehensive testing UI that allows you to:
 
-To learn more about Next.js, take a look at the following resources:
+1. **Login**: Test user authentication and receive JWT tokens
+2. **Token Refresh**: Test refresh token functionality
+3. **Protected Access**: Test access to protected resources
+4. **Logout**: Test token invalidation
+5. **Token Status**: Monitor stored tokens and cleanup expired ones
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Simply open [http://localhost:3000](http://localhost:3000) and use the interactive test cards to verify all authentication features.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## API Endpoints
 
-## Deploy on Vercel
+### Authentication
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `POST /api/auth/login` - User login with JWT tokens
+- `POST /api/auth/refresh` - Refresh access token
+- `POST /api/auth/logout` - User logout (token invalidation)
+- `GET /api/auth/status` - Token status and management
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Protected Resources
+
+- `GET /api/protected` - Protected data endpoint (requires valid access token)
+
+## Token Store Architecture
+
+The project uses a singleton `TokenStore` class to centrally manage refresh tokens:
+
+```typescript
+import { tokenStore } from "@/lib/provider/token-store.server";
+
+// Store a refresh token
+tokenStore.setRefreshToken(token, {
+  userId: "user123",
+  exp: Date.now() + 3600000,
+});
+
+// Check if token exists
+const exists = tokenStore.hasRefreshToken(token);
+
+// Delete a token
+tokenStore.deleteRefreshToken(token);
+
+// Clean up expired tokens
+tokenStore.cleanupExpiredTokens();
+```
+
+**Note**: Current implementation uses in-memory storage. For production, consider using Redis or a database.
+
+### AI Tool Reference
+
+- [Google Gemini](https://g.co/gemini/share/512d3e8a3cdc)
+- [Cursor Chat History](./public/cursor_refresh_tokens_as_a_singleton.md)

@@ -1,5 +1,6 @@
 import { BentoCard } from "@/components/bento-card";
 import { useAuthTest } from "../hooks/use-auth-test";
+import { AuthStatusDebug } from "@/components/auth-status-debug";
 
 export function AuthTestPage() {
   const {
@@ -15,6 +16,7 @@ export function AuthTestPage() {
 
   return (
     <main className="min-h-screen bg-gray-950 text-gray-200 p-8 sm:p-12 md:p-16 lg:p-24 font-sans antialiased">
+      <AuthStatusDebug />
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-center text-white leading-tight">
           인증 시스템 테스트
