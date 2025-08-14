@@ -10,12 +10,13 @@
  * Interface for the request configuration object.
  */
 export interface AxiosRequestConfig {
-  url: string;
-  method?: string;
+  url?: string;
+  method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
   headers?: Record<string, string>;
   params?: Record<string, any>;
   data?: any;
   timeout?: number;
+  [key: string]: any;
 }
 
 /**
@@ -133,7 +134,7 @@ function dispatchRequest(config: AxiosRequestConfig): Promise<AxiosResponse> {
     const params = config.params
       ? new URLSearchParams(config.params).toString()
       : "";
-    const fullUrl = params ? `${url}?${params}` : url;
+    const fullUrl = params ? `${url}?${params}` : url || "";
 
     xhr.open(method, fullUrl, true);
 
@@ -216,13 +217,14 @@ function dispatchRequest(config: AxiosRequestConfig): Promise<AxiosResponse> {
 // The core class representing an Axios instance.
 
 class Axios {
+  public defaults: AxiosRequestConfig;
   public interceptors = {
     request: new InterceptorManager<AxiosRequestConfig>(),
     response: new InterceptorManager<AxiosResponse>(),
   };
 
-  constructor() {
-    // Empty constructor, interceptors are managed directly.
+  constructor(defaults?: AxiosRequestConfig) {
+    this.defaults = defaults || {};
   }
 
   /**
@@ -232,7 +234,8 @@ class Axios {
    */
   request<T = any>(config: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     // Create an initial promise chain
-    let promise = Promise.resolve(config) as Promise<any>;
+    const mergedConfig = { ...this.defaults, ...config };
+    let promise = Promise.resolve(mergedConfig) as Promise<any>;
 
     // Add request interceptors to the front of the chain
     this.interceptors.request.forEach((handler) => {
@@ -262,15 +265,23 @@ class Axios {
 
   post<T = any>(
     url: string,
-    data: any,
+    data?: any,
     config: Omit<AxiosRequestConfig, "url" | "method" | "data"> = {}
   ): Promise<AxiosResponse<T>> {
     return this.request<T>({ ...config, method: "POST", url, data });
   }
 
+  patch<T = any>(
+    url: string,
+    data?: any,
+    config: Omit<AxiosRequestConfig, "url" | "method" | "data"> = {}
+  ): Promise<AxiosResponse<T>> {
+    return this.request<T>({ ...config, method: "PATCH", url, data });
+  }
+
   put<T = any>(
     url: string,
-    data: any,
+    data?: any,
     config: Omit<AxiosRequestConfig, "url" | "method" | "data"> = {}
   ): Promise<AxiosResponse<T>> {
     return this.request<T>({ ...config, method: "PUT", url, data });
@@ -285,3 +296,7 @@ class Axios {
 }
 
 export const axios = new Axios();
+
+export function createAxiosInstance(defaults?: AxiosRequestConfig): Axios {
+  return new Axios(defaults);
+}
