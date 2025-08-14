@@ -24,19 +24,11 @@ myAxios.interceptors.request.use(
 myAxios.interceptors.response.use(
   (response) => {
     console.log("[Response Interceptor]: 응답 인터셉터가 동작했습니다.");
-    try {
-      // 응답이 이미 JSON 객체인 경우 (dispatchRequest에서 JSON.parse를 시도했으므로)
-      response.data = {
-        originalData: response.data,
-        message: "응답 인터셉터가 데이터를 변환했습니다.",
-      };
-    } catch (e) {
-      // 파싱 실패 시 원본 데이터를 사용
-      response.data = {
-        originalData: response.data,
-        message: "응답 인터셉터가 데이터를 변환했습니다. (raw text)",
-      };
-    }
+    // JSON 파싱이 이미 dispatchRequest에서 처리되었으므로 추가 변환 없이 로깅만
+    console.log(
+      "[Response Interceptor]: Original response data:",
+      response.data
+    );
     return response;
   },
   (error) => {
@@ -98,9 +90,8 @@ export function useAuthTest() {
     try {
       const response = await myAxios.post("/api/auth/login");
 
-      // 응답 인터셉터에 의해 변환된 데이터에서 토큰 추출
-      const responseData = response.data.originalData || response.data;
-      const { accessToken, refreshToken } = responseData;
+      // JSON 파싱이 이미 dispatchRequest에서 처리되었으므로 직접 추출
+      const { accessToken, refreshToken } = response.data;
 
       if (!accessToken || !refreshToken) {
         throw new Error("토큰이 응답에 포함되지 않았습니다.");
@@ -143,9 +134,8 @@ export function useAuthTest() {
         refreshToken: tokens.refreshToken,
       });
 
-      // 응답 인터셉터에 의해 변환된 데이터에서 토큰 추출
-      const responseData = response.data.originalData || response.data;
-      const { accessToken } = responseData;
+      // JSON 파싱이 이미 dispatchRequest에서 처리되었으므로 직접 추출
+      const { accessToken } = response.data;
 
       if (!accessToken) {
         throw new Error("새로운 accessToken이 응답에 포함되지 않았습니다.");

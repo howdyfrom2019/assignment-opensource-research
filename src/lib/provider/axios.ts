@@ -167,8 +167,20 @@ function dispatchRequest(config: AxiosRequestConfig): Promise<AxiosResponse> {
             return acc;
           }, {} as Record<string, string>);
 
+        // 응답 데이터 처리 (JSON 파싱 시도)
+        let responseData = xhr.responseText;
+        try {
+          // JSON 응답인 경우 파싱 시도
+          if (xhr.responseText && xhr.responseText.trim()) {
+            responseData = JSON.parse(xhr.responseText);
+          }
+        } catch (e) {
+          // JSON 파싱 실패 시 원본 텍스트 사용
+          responseData = xhr.responseText;
+        }
+
         const response: AxiosResponse = {
-          data: xhr.response,
+          data: responseData,
           status: xhr.status,
           statusText: xhr.statusText,
           headers: responseHeaders,
@@ -179,13 +191,23 @@ function dispatchRequest(config: AxiosRequestConfig): Promise<AxiosResponse> {
         if (xhr.status >= 200 && xhr.status < 300) {
           resolve(response);
         } else {
+          // 에러 응답 데이터 처리 (JSON 파싱 시도)
+          let errorResponseData = xhr.responseText;
+          try {
+            if (xhr.responseText && xhr.responseText.trim()) {
+              errorResponseData = JSON.parse(xhr.responseText);
+            }
+          } catch (e) {
+            errorResponseData = xhr.responseText;
+          }
+
           const error = new AxiosError(
             `Request failed with status code ${xhr.status}`,
             config,
             undefined,
             xhr,
             {
-              data: xhr.responseText,
+              data: errorResponseData,
               status: xhr.status,
               statusText: xhr.statusText,
               headers: responseHeaders,
